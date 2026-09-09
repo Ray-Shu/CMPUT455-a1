@@ -4,6 +4,7 @@
 
 from sys import stderr
 from typing import List, Dict, Callable
+import ast
 
 def not_yet() -> bool:
     raise NotImplementedError("Command not implemented.")
@@ -14,6 +15,8 @@ def print_error(error: str) -> None:
 
 CommandMap = Dict[str, Callable[[str], bool]]
 
+BLACK = 'b'
+WHITE = 'w'
 class CommandInterface:
     def __init__(self) -> None:
         # you can add your own initialisation here
@@ -29,13 +32,41 @@ class CommandInterface:
             "winner": self.cmd_winner,
             }
 
+        self.to_play:str = 'b'
+        self.komi:float = 0.0
+        self.score:float = 0.0
+        self.moves:List = [] #idk abt this one
+        self.game_state:List[List[tuple]]
+
 #============================================================================
 # You need to implement the following methods.
 #============================================================================
     def cmd_heapgo(self, args: str) -> bool:
-        return not_yet()
+        """
+        Start heapgo game. 
+        Args: 
+            'heapgo komi G'
+            - komi is a number 
+            - G is a string specifying the game state 
+            e.g. heapgo 0.5 [[('w', 2)]]
+        Returns: 
+            1: command was successfully executed 
+            0: command failed 
+        """
+        try: 
+            arg = args.split(sep=' ', maxsplit=1)
+            self.komi = float(arg[0]) 
+            self.game_state = ast.literal_eval(arg[1]) 
+            return 1
+        except: 
+            return -1
+
     def cmd_show(self, args: str) -> bool:
-        return not_yet()
+        try:
+            print(f"k {self.komi} {self.game_state}")
+            return 1
+        except: 
+            return -1
     def cmd_toplay(self, args: str) -> bool:
         return not_yet()
     def cmd_play(self, args: str) -> bool:
@@ -102,5 +133,7 @@ class CommandInterface:
 
 if __name__ == "__main__":
     interface = CommandInterface()
+
+    print("Game Start (input command, 'help' to show commands)")
     interface.main_loop()
 
