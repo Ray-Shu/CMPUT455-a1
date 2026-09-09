@@ -34,7 +34,8 @@ class CommandInterface:
 
         self.to_play:str = 'b'
         self.komi:float = 0.0
-        self.score:float = 0.0
+        self.black_score:float = 0.0
+        self.white_score:float = 0.0
         self.moves:List = [] #idk abt this one
         self.game_state:List[List[tuple]]
 
@@ -56,6 +57,7 @@ class CommandInterface:
         try: 
             arg = args.split(sep=' ', maxsplit=1)
             self.komi = float(arg[0]) 
+            self.white_score += self.komi
             self.game_state = ast.literal_eval(arg[1]) 
             return 1
         except: 
@@ -67,16 +69,48 @@ class CommandInterface:
             return 1
         except: 
             return -1
+        
     def cmd_toplay(self, args: str) -> bool:
-        return not_yet()
+        if (args == "b" or args == "w"):
+            self.to_play = args # set to_play to that color
+            return 1
+        else:
+            return -1
+        
     def cmd_play(self, args: str) -> bool:
-        return not_yet()
+        args = int(args)
+        if self.to_play == "b" and args <= 9 and args >= 0: # make sure the heap num is between 1 & 10
+            while len(self.game_state[args]) > 0:
+                element = self.game_state[args][0]
+                if element[0] == "b": # add all the black elements if to_play is black
+                    self.black_score += element[1]
+                    self.game_state[args].pop(0)
+                elif element[0] == "w":
+                    self.black_score += element[1] # then take a white element and switch to_play to white
+                    self.game_state[args].pop(0)
+                    self.to_play = "w"
+                    return 1
+        elif self.to_play == "w" and args <= 9 and args >= 0:
+            while len(self.game_state[args]) > 0:
+                element = self.game_state[args][0]
+                if element[0] == "w": # add all the white elements if to_play is white
+                    self.white_score += element[1]
+                    self.game_state[args].pop(0)
+                elif element[0] == "b":
+                    self.white_score += element[1] # take a black element and switch to_play to black
+                    self.game_state[args].pop(0)
+                    self.to_play = "b"
+                    return 1
+        else:
+            return -1
+        
     def cmd_legal(self, args: str) -> bool:
         return not_yet()
     def cmd_genmove(self, args: str) -> bool:
         return not_yet()
     def cmd_score(self, args: str) -> bool:
-        return not_yet()
+        print(f"b {self.black_score} w {self.white_score}")
+        return 1
     def cmd_winner(self, args: str) -> bool:
         return not_yet()
 #============================================================================
