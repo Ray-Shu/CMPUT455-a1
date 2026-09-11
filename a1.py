@@ -5,6 +5,7 @@
 from sys import stderr
 from typing import List, Dict, Callable
 import ast
+import random
 
 def not_yet() -> bool:
     raise NotImplementedError("Command not implemented.")
@@ -54,68 +55,64 @@ class CommandInterface:
             1: command was successfully executed 
             0: command failed 
         """
-        try: 
+
+        try:
             arg = args.split(sep=' ', maxsplit=1)
-            self.komi = float(arg[0]) 
-            self.white_score += self.komi
-            self.game_state = ast.literal_eval(arg[1]) 
+            self.komi = float(arg[0])
+            self.white_score = self.komi # setting this fresh everytime since it was accumulating every new game
+            self.game_state = ast.literal_eval(arg[1])
+            self.black_score = 0.0
+            self.to_play = 'b'
             return 1
-        except: 
-            return -1
+        except:
+            return False
 
     def cmd_show(self, args: str) -> bool:
         try:
             print(f"k {self.komi} {self.game_state}")
-            return 1
+            return True
         except: 
-            return -1
+            return False
         
     def cmd_toplay(self, args: str) -> bool:
         if (args == "b" or args == "w"):
             self.to_play = args # set to_play to that color
-            return 1
+            return True
         else:
-            return -1
+            return False
         
     def cmd_play(self, args: str) -> bool:
-        args = int(args)
-        if self.to_play == "b" and args <= 9 and args >= 0: # make sure the heap num is between 1 & 10
-            while len(self.game_state[args]) > 0:
-                element = self.game_state[args][0]
-                if element[0] == "b": # add all the black elements if to_play is black
-                    self.black_score += element[1]
-                    self.game_state[args].pop(0)
-                elif element[0] == "w":
-                    self.black_score += element[1] # then take a white element and switch to_play to white
-                    self.game_state[args].pop(0)
-                    self.to_play = "w"
-                    return 1
-        elif self.to_play == "w" and args <= 9 and args >= 0:
-            while len(self.game_state[args]) > 0:
-                element = self.game_state[args][0]
-                if element[0] == "w": # add all the white elements if to_play is white
-                    self.white_score += element[1]
-                    self.game_state[args].pop(0)
-                elif element[0] == "b":
-                    self.white_score += element[1] # take a black element and switch to_play to black
-                    self.game_state[args].pop(0)
-                    self.to_play = "b"
-                    return 1
+        heap = int(args)
+
+        # false if heap is negative, out of range, or already empty
+        if heap < 0 or heap >= len(self.game_state) or len(self.game_state[heap]) == 0: 
+            return False
+
+        color = self.to_play
+        score = 0.0
+
+        while self.game_state[heap] and self.game_state[heap][-1][0] == color: # take all tokens if its current player's color
+            score += self.game_state[heap].pop()[1]
+        if self.game_state[heap]: # if tokens left take exactly one
+            score += self.game_state[heap].pop()[1]
+
+        if color == "b":
+            self.black_score += score
+
         else:
-            return -1
+            self.white_score += score
+        self.to_play = "w" if color == "b" else "b" #
+        return True
         
     def cmd_legal(self, args: str) -> bool:
-        try:
-            heap = int(args)
-        except:
-            return -1
+        heap = int(args)
         if heap < 0:
-            return - 1
-        if heap < len(self.game_state) and len(self.game_state[heap]) > 0: # 
+            return False
+        if heap < len(self.game_state) and len(self.game_state[heap]) > 0:
             print("yes")
         else:
             print("no")
-        return 1
+        return True
 
     def cmd_genmove(self, args: str) -> bool:
         legal_heaps = []
@@ -123,24 +120,27 @@ class CommandInterface:
             if len(self.game_state[i]) > 0:
                 legal_heaps.append(i)
         if not legal_heaps:
-            return -1
+            return False
         heap = random.choice(legal_heaps)
         self.cmd_play(str(heap))
         print(heap)  
-        return 1
+        return True
+
+    def _fmt(self, x): # helper to control how score gets printed, failing otherwise
+        return str(int(x)) if x == int(x) else str(x)
 
     def cmd_score(self, args: str) -> bool:
-        print(f"b {self.black_score} w {self.white_score}")
-        return 1
+        print(f"b {self._fmt(self.black_score)} w {self._fmt(self.white_score)}")
+        return True
 
     def cmd_winner(self, args: str) -> bool:
-        if any(len(heap) > 0 for heap in self.game_state): # game not finished, return -1
-            return - 1
+        if any(len(heap) > 0 for heap in self.game_state): # game not finished, return False
+            return False
         if self.black_score > self.white_score:
             print("b")
         else:
             print("w")
-        return 1
+        return True
         
 #============================================================================
 # End of functions requiring implementation
@@ -196,7 +196,7 @@ class CommandInterface:
 
 if __name__ == "__main__":
     interface = CommandInterface()
-
-    print("Game Start (input command, 'help' to show commands)")
+    # below is causing the one of the command outputs to mismatch
+    # print("Game Start (input command, 'help' to show commands)")
     interface.main_loop()
 
