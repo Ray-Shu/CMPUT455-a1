@@ -155,6 +155,12 @@ class CommandInterface:
             heap = int(args)
         except:
             return 0
+
+        try:
+            self.game_state
+        except:
+            return 0
+        
         if heap < 0:
             return 0
         if heap < len(self.game_state) and len(self.game_state[heap]) > 0:
@@ -164,6 +170,11 @@ class CommandInterface:
         return 1
 
     def cmd_genmove(self, args: str) -> bool:
+        try:
+            self.game_state
+        except:
+            return 0
+        
         legal_heaps = []
         for i in range(len(self.game_state)):
             if len(self.game_state[i]) > 0:
@@ -179,10 +190,19 @@ class CommandInterface:
         return str(int(x)) if x == int(x) else str(x)
 
     def cmd_score(self, args: str) -> bool:
+        try:
+            self.game_state
+        except:
+            return 0
         print(f"b {self._fmt(self.black_score)} w {self._fmt(self.white_score)}")
         return 1
 
     def cmd_winner(self, args: str) -> bool:
+        try:
+            self.game_state
+        except:
+            return 0
+        
         if any(len(heap) > 0 for heap in self.game_state): # game not finished, return -1
             return 0
 
