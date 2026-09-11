@@ -68,6 +68,8 @@ class CommandInterface:
             return False
 
     def cmd_show(self, args: str) -> bool:
+        if (args): # too many arguements, shouldn't have any arguement
+            return False
         try:
             print(f"k {self.komi} {self.game_state}")
             return True
@@ -82,7 +84,10 @@ class CommandInterface:
             return False
         
     def cmd_play(self, args: str) -> bool:
-        heap = int(args)
+        try:
+            heap = int(args)
+        except:
+            return False
 
         # false if heap is negative, out of range, or already empty
         if heap < 0 or heap >= len(self.game_state) or len(self.game_state[heap]) == 0: 
@@ -105,7 +110,11 @@ class CommandInterface:
         return True
         
     def cmd_legal(self, args: str) -> bool:
-        heap = int(args)
+        try:
+            heap = int(args)
+        except:
+            return False
+        
         if heap < 0:
             return False
         if heap < len(self.game_state) and len(self.game_state[heap]) > 0:
@@ -115,6 +124,8 @@ class CommandInterface:
         return True
 
     def cmd_genmove(self, args: str) -> bool:
+        if (args): # too many arguements, shouldn't have any arguement
+            return False
         legal_heaps = []
         for i in range(len(self.game_state)):
             if len(self.game_state[i]) > 0:
@@ -130,10 +141,14 @@ class CommandInterface:
         return str(int(x)) if x == int(x) else str(x)
 
     def cmd_score(self, args: str) -> bool:
+        if (args): # too many arguements, shouldn't have any arguement
+            return False
         print(f"b {self._fmt(self.black_score)} w {self._fmt(self.white_score)}")
         return True
 
     def cmd_winner(self, args: str) -> bool:
+        if (args): # too many arguements, shouldn't have any arguement
+            return False
         if any(len(heap) > 0 for heap in self.game_state): # game not finished, return False
             return False
         if self.black_score > self.white_score:
