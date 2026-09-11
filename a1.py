@@ -105,14 +105,43 @@ class CommandInterface:
             return -1
         
     def cmd_legal(self, args: str) -> bool:
-        return not_yet()
+        try:
+            heap = int(args)
+        except:
+            return -1
+        if heap < 0:
+            return - 1
+        if heap < len(self.game_state) and len(self.game_state[heap]) > 0: # 
+            print("yes")
+        else:
+            print("no")
+        return 1
+
     def cmd_genmove(self, args: str) -> bool:
-        return not_yet()
+        legal_heaps = []
+        for i in range(len(self.game_state)):
+            if len(self.game_state[i]) > 0:
+                legal_heaps.append(i)
+        if not legal_heaps:
+            return -1
+        heap = random.choice(legal_heaps)
+        self.cmd_play(str(heap))
+        print(heap)  
+        return 1
+
     def cmd_score(self, args: str) -> bool:
         print(f"b {self.black_score} w {self.white_score}")
         return 1
+
     def cmd_winner(self, args: str) -> bool:
-        return not_yet()
+        if any(len(heap) > 0 for heap in self.game_state): # game not finished, return -1
+            return - 1
+        if self.black_score > self.white_score:
+            print("b")
+        else:
+            print("w")
+        return 1
+        
 #============================================================================
 # End of functions requiring implementation
 #============================================================================
