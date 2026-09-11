@@ -5,6 +5,7 @@
 from sys import stderr
 from typing import List, Dict, Callable
 import ast
+import random
 
 def not_yet() -> bool:
     raise NotImplementedError("Command not implemented.")
@@ -122,7 +123,7 @@ class CommandInterface:
             self.to_play = args # set to_play to that color
             return 1
         else:
-            return -1
+            return 0
         
     def cmd_play(self, args: str) -> bool:
         args = int(args)
@@ -149,15 +150,15 @@ class CommandInterface:
                     self.to_play = "b"
                     return 1
         else:
-            return -1
+            return 0
         
     def cmd_legal(self, args: str) -> bool:
         try:
             heap = int(args)
         except:
-            return -1
+            return 0
         if heap < 0:
-            return - 1
+            return 0
         if heap < len(self.game_state) and len(self.game_state[heap]) > 0: # 
             print("yes")
         else:
@@ -170,7 +171,7 @@ class CommandInterface:
             if len(self.game_state[i]) > 0:
                 legal_heaps.append(i)
         if not legal_heaps:
-            return -1
+            return 0
         heap = random.choice(legal_heaps)
         self.cmd_play(str(heap))
         print(heap)  
@@ -182,7 +183,7 @@ class CommandInterface:
 
     def cmd_winner(self, args: str) -> bool:
         if any(len(heap) > 0 for heap in self.game_state): # game not finished, return -1
-            return - 1
+            return 0
         if self.black_score > self.white_score:
             print("b")
         else:
