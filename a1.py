@@ -54,16 +54,72 @@ class CommandInterface:
             1: command was successfully executed 
             0: command failed 
         """
-        try: 
-            arg = args.split(sep=' ', maxsplit=1)
-            self.komi = float(arg[0]) 
-            self.white_score += self.komi
-            self.game_state = ast.literal_eval(arg[1]) 
-            return 1
-        except: 
-            return -1
+
+        '''
+        check:
+        1. numheaps between 1 n 10 
+        2. each heap contains between 1 n 10 tokens
+        3. each token is has either color "b" or "w" and value between 1 n 20 (inclusive)
+        4. komi is an INT + 0.5. Komi in (-100, 100)
+        5. Black score = 0, White score = komi
+        '''
+
+        # check if gamestate exists
+        if "[" not in args:
+            return 0
+
+        # split args
+        split_idx = args.index("[")
+        komi_str = args[:split_idx].strip()
+        game_state_str = args[split_idx:].strip()
+
+        # check if komi exists
+        if not komi_str: 
+            return 0
+        try:
+            self.komi = float(komi_str) # checks if komi is a float
+        except ValueError:
+            return 0
+        
+        self.white_score += self.komi
+
+        # check if game state is proper typing
+        self.game_state = ast.literal_eval(game_state_str) 
+        if not isinstance(self.game_state, list):
+            return 0
+
+        # Komi check 
+        if not (-100 < self.komi < 100): return 0
+        self.black_score = 0 
+        self.white_score = self.komi 
+
+        # num heaps & num tokens check & token correctness check 
+        num_heaps = 0
+        for i in range(len(self.game_state)): # num heaps
+            num_heaps += 1
+            num_tokens = 0
+            if not isinstance(self.game_state[i], list): return 0 # checks if List[List[...]]
+            for j in range(len(self.game_state[i])):  # num tokens
+                num_tokens += 1
+                heap = self.game_state[i][j]
+
+                if not isinstance(heap, tuple): return 0 # checks if List[List[Tuple]]
+                if len(heap) != 2: return 0 # checks that heap has only 2 elements (c,n)
+                if heap[0] != 'b' and heap[0] != 'w': return 0 # checks player colours
+                if not (1 <= heap[1] <= 20): return 0 # checks heap value in [1,20] 
+                if num_tokens > 10: return 0
+            if num_heaps > 10: return 0
+                
+        return 1
 
     def cmd_show(self, args: str) -> bool:
+        """
+        Shows Komi and current game state.
+
+        Returns: 
+            1: command was successfully executed 
+            0: command failed 
+        """
         try:
             print(f"k {self.komi} {self.game_state}")
             return 1
