@@ -56,37 +56,83 @@ class CommandInterface:
             0: command failed 
         """
 
+        # check if gamestate exists
+        if "[" not in args:
+            return 0
+
+        # split args
+        split_idx = args.index("[")
+        komi_str = args[:split_idx].strip()
+        game_state_str = args[split_idx:].strip()
+
+        # check if komi exists
+        if not komi_str: 
+            return 0
         try:
-            arg = args.split(sep=' ', maxsplit=1)
-            self.komi = float(arg[0])
-            self.white_score = self.komi # setting this fresh everytime since it was accumulating every new game
-            self.game_state = ast.literal_eval(arg[1])
-            self.black_score = 0.0
-            self.to_play = 'b'
-            return 1
-        except:
-            return False
+            self.komi = float(komi_str) # checks if komi is a float
+        except ValueError:
+            return 0
+
+        # check if game state is proper typing
+        self.game_state = ast.literal_eval(game_state_str) 
+        if not isinstance(self.game_state, list):
+            return 0
+
+        # Komi check 
+        if not (-100 < self.komi < 100): return 0
+        self.black_score = 0 
+        self.white_score = self.komi
+        self.to_play = "b"
+
+        # num heaps & num tokens check & token correctness check 
+        num_heaps = 0
+        for i in range(len(self.game_state)): # num heaps
+            num_heaps += 1
+            num_tokens = 0
+            if not isinstance(self.game_state[i], list): return 0 # checks if List[List[...]]
+            for j in range(len(self.game_state[i])):  # num tokens
+                num_tokens += 1
+                heap = self.game_state[i][j]
+
+                if not isinstance(heap, tuple): return 0 # checks if List[List[Tuple]]
+                if len(heap) != 2: return 0 # checks that heap has only 2 elements (c,n)
+                if heap[0] != 'b' and heap[0] != 'w': return 0 # checks player colours
+                if not (1 <= heap[1] <= 20): return 0 # checks heap value in [1,20] 
+                if num_tokens > 10: return 0
+            if num_heaps > 10: return 0
+                
+        return 1
 
     def cmd_show(self, args: str) -> bool:
+        """
+        Shows Komi and current game state.
+
+        Returns: 
+            1: command was successfully executed 
+            0: command failed 
+        """
         try:
             print(f"k {self.komi} {self.game_state}")
-            return True
+            return 1
         except: 
-            return False
+            return 0
         
     def cmd_toplay(self, args: str) -> bool:
         if (args == "b" or args == "w"):
             self.to_play = args # set to_play to that color
-            return True
+            return 1
         else:
-            return False
-        
+            return 0
+
     def cmd_play(self, args: str) -> bool:
-        heap = int(args)
+        try:
+            heap = int(args)
+        except:
+            return 0
 
         # false if heap is negative, out of range, or already empty
         if heap < 0 or heap >= len(self.game_state) or len(self.game_state[heap]) == 0: 
-            return False
+            return 0
 
         color = self.to_play
         score = 0.0
@@ -102,17 +148,20 @@ class CommandInterface:
         else:
             self.white_score += score
         self.to_play = "w" if color == "b" else "b" #
-        return True
+        return 1
         
     def cmd_legal(self, args: str) -> bool:
-        heap = int(args)
+        try:
+            heap = int(args)
+        except:
+            return 0
         if heap < 0:
-            return False
+            return 0
         if heap < len(self.game_state) and len(self.game_state[heap]) > 0:
             print("yes")
         else:
             print("no")
-        return True
+        return 1
 
     def cmd_genmove(self, args: str) -> bool:
         legal_heaps = []
@@ -120,27 +169,28 @@ class CommandInterface:
             if len(self.game_state[i]) > 0:
                 legal_heaps.append(i)
         if not legal_heaps:
-            return False
+            return 0
         heap = random.choice(legal_heaps)
         self.cmd_play(str(heap))
         print(heap)  
-        return True
+        return 1
 
     def _fmt(self, x): # helper to control how score gets printed, failing otherwise
         return str(int(x)) if x == int(x) else str(x)
 
     def cmd_score(self, args: str) -> bool:
         print(f"b {self._fmt(self.black_score)} w {self._fmt(self.white_score)}")
-        return True
+        return 1
 
     def cmd_winner(self, args: str) -> bool:
-        if any(len(heap) > 0 for heap in self.game_state): # game not finished, return False
-            return False
+        if any(len(heap) > 0 for heap in self.game_state): # game not finished, return -1
+            return 0
+
         if self.black_score > self.white_score:
             print("b")
         else:
             print("w")
-        return True
+        return 1
         
 #============================================================================
 # End of functions requiring implementation
