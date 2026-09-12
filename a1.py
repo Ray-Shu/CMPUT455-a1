@@ -70,30 +70,28 @@ class CommandInterface:
             return 0
         try:
             komi = float(komi_str) # checks if komi is a float
-            if isinstance(komi,)
             if komi % 1 != 0.5: return 0 # checks komi is int + 0.5
         except ValueError:
             return 0
 
         # check if game state is proper typing
-        game_state = ast.literal_eval(game_state_str) 
+        try:
+            game_state = ast.literal_eval(game_state_str)  # makes sure that illegitimate gamestates (eg [[('w', 2)]] junk) dont count
+        except Exception: 
+            return 0
         if not isinstance(game_state, list):
             return 0
 
         # Komi check 
         if not (-100 < komi < 100): return 0
-        self.black_score = 0 
-        self.white_score = komi
-        self.to_play = "b"
-
+        
         # num heaps & num tokens check & token correctness check 
-        num_heaps = 0
+        if not (1 <= len(game_state) <= 10): return 0 # checks if num heaps has valid range
         for i in range(len(game_state)): # num heaps
-            num_heaps += 1
-            num_tokens = 0
             if not isinstance(game_state[i], list): return 0 # checks if List[List[...]]
+            if not (1 <= len(game_state[i]) <= 10): return 0 # checks if num tokens has valid range
+
             for j in range(len(game_state[i])):  # num tokens
-                num_tokens += 1
                 heap = game_state[i][j]
 
                 if not isinstance(heap, tuple): return 0 # checks if List[List[Tuple]]
@@ -102,12 +100,14 @@ class CommandInterface:
                 if not isinstance(heap[1], int) or isinstance(heap[1], bool): return 0 # checks if value is int (True gets evaluated correctly)
                 if heap[0] != 'b' and heap[0] != 'w': return 0 # checks player colours
                 if not (1 <= heap[1] <= 20): return 0 # checks heap value in [1,20] 
-                if num_tokens > 10: return 0 # checks if 
-            if num_heaps > 10: return 0
 
+        # set game states
         self.komi = komi 
         self.game_state = game_state
-                
+        self.black_score = 0 
+        self.white_score = komi
+        self.to_play = "b"
+        
         return 1
 
     def cmd_show(self, args: str) -> bool:
@@ -119,7 +119,7 @@ class CommandInterface:
             0: command failed 
         """
         try:
-            print(f"k {self._fmt(self.komi)} {self._fmt(self.game_state)}")
+            print(f"k {self._fmt(self.komi)} {self.game_state}")
             return 1
         except: 
             return 0
