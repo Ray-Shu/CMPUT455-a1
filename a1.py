@@ -69,37 +69,44 @@ class CommandInterface:
         if not komi_str: 
             return 0
         try:
-            self.komi = float(komi_str) # checks if komi is a float
+            komi = float(komi_str) # checks if komi is a float
+            if isinstance(komi,)
+            if komi % 1 != 0.5: return 0 # checks komi is int + 0.5
         except ValueError:
             return 0
 
         # check if game state is proper typing
-        self.game_state = ast.literal_eval(game_state_str) 
-        if not isinstance(self.game_state, list):
+        game_state = ast.literal_eval(game_state_str) 
+        if not isinstance(game_state, list):
             return 0
 
         # Komi check 
-        if not (-100 < self.komi < 100): return 0
+        if not (-100 < komi < 100): return 0
         self.black_score = 0 
-        self.white_score = self.komi
+        self.white_score = komi
         self.to_play = "b"
 
         # num heaps & num tokens check & token correctness check 
         num_heaps = 0
-        for i in range(len(self.game_state)): # num heaps
+        for i in range(len(game_state)): # num heaps
             num_heaps += 1
             num_tokens = 0
-            if not isinstance(self.game_state[i], list): return 0 # checks if List[List[...]]
-            for j in range(len(self.game_state[i])):  # num tokens
+            if not isinstance(game_state[i], list): return 0 # checks if List[List[...]]
+            for j in range(len(game_state[i])):  # num tokens
                 num_tokens += 1
-                heap = self.game_state[i][j]
+                heap = game_state[i][j]
 
                 if not isinstance(heap, tuple): return 0 # checks if List[List[Tuple]]
                 if len(heap) != 2: return 0 # checks that heap has only 2 elements (c,n)
+                if not isinstance(heap[0], str): return 0 # checks if colour is str
+                if not isinstance(heap[1], int) or isinstance(heap[1], bool): return 0 # checks if value is int (True gets evaluated correctly)
                 if heap[0] != 'b' and heap[0] != 'w': return 0 # checks player colours
                 if not (1 <= heap[1] <= 20): return 0 # checks heap value in [1,20] 
-                if num_tokens > 10: return 0
+                if num_tokens > 10: return 0 # checks if 
             if num_heaps > 10: return 0
+
+        self.komi = komi 
+        self.game_state = game_state
                 
         return 1
 
@@ -112,7 +119,7 @@ class CommandInterface:
             0: command failed 
         """
         try:
-            print(f"k {self.komi} {self.game_state}")
+            print(f"k {self._fmt(self.komi)} {self._fmt(self.game_state)}")
             return 1
         except: 
             return 0
